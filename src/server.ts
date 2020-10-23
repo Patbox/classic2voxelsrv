@@ -234,7 +234,7 @@ class Server extends EventEmitter {
 			protocol: serverProtocol,
 			maxplayers: serverConfig.maxplayers,
 			numberplayers: this.playerCount,
-			software: `VoxelSrv-Server`,
+			software: `classic2voxelsrv`,
 		});
 
 		let loginTimeout = true;
