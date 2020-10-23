@@ -1,0 +1,13 @@
+{
+  "port": 3001,
+  "address": "0.0.0.0",
+  "name": "Server",
+  "motd": "Another VoxelSRV server",
+  "public": false,
+  "maxplayers": 10,
+  "chunkTransportCompression": false,
+  "connect": {
+    "address": "localhost",
+    "port": 25565
+  }
+}
