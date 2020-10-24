@@ -401,18 +401,72 @@ class Server extends EventEmitter {
 			});
 
 			player.on('position_update', (d) => {
+				entities[d.player_id].x = entities[d.player_id].x + d.change_in_x;
+				entities[d.player_id].y = entities[d.player_id].y + d.change_in_y;
+				entities[d.player_id].z = entities[d.player_id].z + d.change_in_z;
+
 				socket.send('EntityMove', {
 					uuid: entities[d.player_id].id,
-					x: (entities[d.player_id].z + d.change_in_z) / 32,
-					y: (entities[d.player_id].y + d.change_in_y) / 32,
-					z: (entities[d.player_id].x + d.change_in_x) / 32,
-					rotation: 0,
-					yaw: 0,
+					x: entities[d.player_id].z / 32,
+					y: entities[d.player_id].y / 32,
+					z: entities[d.player_id].x / 32,
+					rotation: (entities[d.player_id].rotation / 255) * 6.28,
+					yaw: entities[d.player_id].yaw / 3.14,
 				});
+			});
 
-				entities[d.player_id].z = entities[d.player_id].z + d.change_in_z;
-				entities[d.player_id].y = entities[d.player_id].y + d.change_in_y;
+			player.on('position_and_orientation_update', (d) => {
 				entities[d.player_id].x = entities[d.player_id].x + d.change_in_x;
+				entities[d.player_id].y = entities[d.player_id].y + d.change_in_y;
+				entities[d.player_id].z = entities[d.player_id].z + d.change_in_z;
+				entities[d.player_id].rotation = d.pitch;
+				entities[d.player_id].yaw = d.yaw;
+
+				socket.send('EntityMove', {
+					uuid: entities[d.player_id].id,
+					x: entities[d.player_id].z / 32,
+					y: entities[d.player_id].y / 32,
+					z: entities[d.player_id].x / 32,
+					rotation: (entities[d.player_id].rotation / 255) * 6.28,
+					yaw: entities[d.player_id].yaw / 3.14,
+				});
+			});
+
+			player.on('orientation_update', (d) => {
+				entities[d.player_id].rotation = d.pitch;
+				entities[d.player_id].yaw = d.yaw;
+
+				socket.send('EntityMove', {
+					uuid: entities[d.player_id].id,
+					x: entities[d.player_id].z / 32,
+					y: entities[d.player_id].y / 32,
+					z: entities[d.player_id].x / 32,
+					rotation: (entities[d.player_id].rotation / 255) * 6.28,
+					yaw: entities[d.player_id].yaw / 3.14,
+				});
+			});
+
+			player.on('player_teleport', (d) => {
+				if (d.player_id == 255 || d.player_id == -1) {
+					socket.send('PlayerTeleport', {
+						x: d.z / 32,
+						y: d.y / 32,
+						z: d.x / 32,
+					});
+				} else {
+					entities[d.player_id].x = d.x;
+					entities[d.player_id].y = d.y;
+					entities[d.player_id].z = d.z;
+
+					socket.send('EntityMove', {
+						uuid: entities[d.player_id].id,
+						x: entities[d.player_id].z / 32,
+						y: entities[d.player_id].y / 32,
+						z: entities[d.player_id].x / 32,
+						rotation: (entities[d.player_id].rotation / 255) * 6.28,
+						yaw: entities[d.player_id].yaw / 3.14,
+					});
+				}
 			});
 
 			player.on('disconnect', () => {
