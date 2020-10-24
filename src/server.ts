@@ -107,11 +107,18 @@ itemRegistry['stationary_lava'].texture = 'item/lava_bucket';
 itemRegistry['flowing_water'].texture = 'item/water_bucket';
 itemRegistry['stationary_water'].texture = 'item/water_bucket';
 
-['flowing_water', 'stationary_water', 'flowing_lava', 'stationary_lava', 'sapling', 'dandelion', 'rose', 'brown_mushroom', 'red_mushroom'].forEach(
-	(x) => {
-		blockRegistry[x].options = { solid: false, opaque: false };
-	}
-);
+['sapling', 'dandelion', 'rose', 'brown_mushroom', 'red_mushroom'].forEach((x) => {
+	blockRegistry[x].options = { solid: false, opaque: false };
+});
+
+['flowing_water', 'stationary_water'].forEach((x) => {
+	blockRegistry[x].options = { fluid: true, material: 'water' };
+});
+
+['flowing_lava', 'stationary_lava'].forEach((x) => {
+	blockRegistry[x].options = { fluid: true, color: [0.6, 0.1, 0.1, 0.7] };
+	delete blockRegistry[x].texture
+});
 
 ['glass', 'leaves'].forEach((x) => {
 	blockRegistry[x].options = { opaque: false };
@@ -120,6 +127,24 @@ itemRegistry['stationary_water'].texture = 'item/water_bucket';
 ['sapling', 'dandelion', 'rose', 'brown_mushroom', 'red_mushroom'].forEach((x) => {
 	blockRegistry[x].type = 1;
 });
+
+const colormap = {
+	'1': 'blue',
+	'2': 'green',
+	'3': 'cyan',
+	'4': 'red',
+	'5': 'purple',
+	'6': 'orange',
+	'7': 'lightgray',
+	'8': 'gray',
+	'9': 'indigo',
+	a: 'lime',
+	b: 'lightblue',
+	c: 'lightred',
+	d: 'magenta',
+	e: 'yellow',
+	f: 'white',
+};
 
 function invItems() {
 	const items = {};
@@ -331,7 +356,21 @@ class Server extends EventEmitter {
 			socket.on('ActionClickEntity', (data: IActionClickEntity) => {});
 
 			player.on('message', (d) => {
-				socket.send('ChatMessage', { message: [{ text: d.message, color: 'white' }] });
+				const text: string[] = d.message.split(/(&[0-9a-fA-F])/);
+
+				const msg = [{ text: '', color: 'white' }];
+				let x = 0;
+				for (x = 0; x < text.length; x++) {
+					if (text[x] == undefined) continue;
+					else if (text[x][0] == '&' && /([kmobnr])/.test(text[x][1])) continue;
+					else if (text[x][0] == '&' && /([0-9a-fA-F])/.test(text[x][1])) {
+						msg.push({ text: '', color: colormap[text[x][1]] });
+					} else {
+						msg[msg.length - 1].text = msg[msg.length - 1].text + text[x];
+					}
+				}
+
+				socket.send('ChatMessage', { message: msg });
 			});
 
 			player.on('spawn_player', (d) => {
