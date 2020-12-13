@@ -18,6 +18,8 @@ import {
 	IActionMessage,
 	IActionMove,
 	ILoginResponse,
+	IActionLook,
+	IActionMoveLook,
 } from 'voxelsrv-protocol/js/client';
 
 import ndarray = require('ndarray');
@@ -271,6 +273,13 @@ class Server extends EventEmitter {
 			let canMove = false;
 			let worldPackets = [];
 			const entities = {};
+			let playerData = {
+				x: 0,
+				y: 0,
+				z: 0,
+				rotation: 0,
+				pitch: 0
+			};
 			let inventory = {
 				items: invItems(),
 				size: mcData.blocksArray.length,
@@ -306,7 +315,7 @@ class Server extends EventEmitter {
 			});
 
 			socket.on('ActionBlockBreak', (data: IActionBlockBreak) => {
-				player.write('set_block', { x: data.z, y: data.y, z: data.x, block_type: 0, mode: 0 });
+				player.write('set_block', { x: data.z, y: data.y, z: data.x, mode: 0 });
 			});
 
 			socket.on('ActionBlockPlace', (data: IActionBlockPlace) => {
@@ -342,10 +351,39 @@ class Server extends EventEmitter {
 			socket.on('ActionMove', async (data: IActionMove) => {
 				if (!canMove) return;
 
+				playerData = {...playerData, ...data};
+
 				player.write('position', {
 					x: data.z * 32,
 					y: data.y * 32 + 51,
 					z: data.x * 32,
+					yaw: remapYaw(playerData.rotation),
+					pitch: remapPitch(playerData.pitch),
+				});
+			});
+
+			socket.on('ActionMoveLook', async (data: IActionMoveLook) => {
+				if (!canMove) return;
+
+				playerData = {...playerData, ...data};
+
+				player.write('position', {
+					x: data.z * 32,
+					y: data.y * 32 + 51,
+					z: data.x * 32,
+					yaw: remapYaw(data.rotation),
+					pitch: remapPitch(data.pitch),
+				});
+			});
+			socket.on('ActionLook', async (data: IActionLook) => {
+				if (!canMove) return;
+
+				playerData = {...playerData, ...data};
+
+				player.write('position', {
+					x: playerData.z * 32,
+					y: playerData.y * 32 + 51,
+					z: playerData.x * 32,
 					yaw: remapYaw(data.rotation),
 					pitch: remapPitch(data.pitch),
 				});
@@ -410,15 +448,16 @@ class Server extends EventEmitter {
 						socket.send('EntityCreate', {
 							uuid: `player${d.player_id.toString()}`,
 							data: JSON.stringify({
-								position: [d.z / 32, d.y / 32, d.x / 32],
-								texture: 'entity/steve',
+								position: [0, 0, 0],
 								model: 'player',
-								offset: 0.9,
+								texture: 'entity/steve',
+								type: 'player',
 								nametag: true,
 								name: d.player_name,
+								maxHealth: 20,
 								health: 20,
-								rotation: 0,
-								pitch: 0,
+								rotation: 1,
+								pitch: 1,
 								hitbox: [0.55, 1.9, 0.55],
 								armor: { items: { 0: {}, 1: {}, 2: {}, 3: {} }, size: 4, selected: 0 },
 							}),
@@ -447,7 +486,7 @@ class Server extends EventEmitter {
 				socket.send('EntityMove', {
 					uuid: entities[d.player_id].id,
 					x: entities[d.player_id].z / 32,
-					y: entities[d.player_id].y / 32,
+					y: entities[d.player_id].y / 32 - 1.8,
 					z: entities[d.player_id].x / 32,
 					rotation: (entities[d.player_id].rotation / 255) * 6.28,
 					yaw: entities[d.player_id].yaw / 3.14,
@@ -464,7 +503,7 @@ class Server extends EventEmitter {
 				socket.send('EntityMove', {
 					uuid: entities[d.player_id].id,
 					x: entities[d.player_id].z / 32,
-					y: entities[d.player_id].y / 32,
+					y: entities[d.player_id].y / 32 - 1.8,
 					z: entities[d.player_id].x / 32,
 					rotation: (entities[d.player_id].rotation / 255) * 6.28,
 					yaw: entities[d.player_id].yaw / 3.14,
@@ -478,7 +517,7 @@ class Server extends EventEmitter {
 				socket.send('EntityMove', {
 					uuid: entities[d.player_id].id,
 					x: entities[d.player_id].z / 32,
-					y: entities[d.player_id].y / 32,
+					y: entities[d.player_id].y / 32  - 1.8,
 					z: entities[d.player_id].x / 32,
 					rotation: (entities[d.player_id].rotation / 255) * 6.28,
 					yaw: entities[d.player_id].yaw / 3.14,
@@ -559,7 +598,7 @@ class Server extends EventEmitter {
 								x: k,
 								y: j,
 								z: i,
-								data: chunk.data,
+								data: Buffer.from(chunk.data.buffer, chunk.data.byteOffset),
 								type: false,
 								compressed: false,
 							};

@@ -15,21 +15,21 @@
     "@types/gl-vec3": "^1.1.0",
     "@types/node-fetch": "^2.5.7",
     "@types/peerjs": "^1.1.0",
-    "@types/ws": "^7.2.7",
+    "@types/ws": "^7.4.0",
     "gl-vec3": "^1.1.3",
     "minecraft-classic-protocol": "^1.3.1",
     "minecraft-classic-protocol-extension": "^1.0.3",
-    "minecraft-data": "^2.69.1",
+    "minecraft-data": "^2.70.2",
     "ndarray": "^1.0.19",
     "node-fetch": "^2.6.1",
     "pako": "^1.0.11",
-    "protobufjs": "^6.10.1",
-    "semver": "^7.3.2",
+    "protobufjs": "^6.10.2",
+    "semver": "^7.3.4",
     "terminal-kit": "^1.44.0",
-    "ts-node": "^9.0.0",
+    "ts-node": "^9.1.1",
     "typedoc": "0.17.0-3",
-    "typescript": "^4.0.3",
+    "typescript": "^4.1.3",
     "voxelsrv-protocol": "github:VoxelSrv/protocol#v2",
-    "ws": "^7.3.1"
+    "ws": "^7.4.1"
   }
 }

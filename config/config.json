@@ -7,7 +7,7 @@
   "maxplayers": 10,
   "chunkTransportCompression": false,
   "connect": {
-    "address": "localhost",
-    "port": 25565
+    "address": "80.241.210.126",
+    "port": 25564
   }
 }
