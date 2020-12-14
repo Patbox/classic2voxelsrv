@@ -486,10 +486,10 @@ class Server extends EventEmitter {
 				socket.send('EntityMove', {
 					uuid: entities[d.player_id].id,
 					x: entities[d.player_id].z / 32,
-					y: entities[d.player_id].y / 32 - 1.8,
+					y: (entities[d.player_id].y - 51) / 32,
 					z: entities[d.player_id].x / 32,
-					rotation: (entities[d.player_id].rotation / 255) * 6.28,
-					yaw: entities[d.player_id].yaw / 3.14,
+					rotation: (entities[d.player_id].rotation - 64) / 255 * 6.28,
+					yaw: entities[d.player_id].yaw / 255 * 6.28,
 				});
 			});
 
@@ -497,30 +497,30 @@ class Server extends EventEmitter {
 				entities[d.player_id].x = entities[d.player_id].x + d.change_in_x;
 				entities[d.player_id].y = entities[d.player_id].y + d.change_in_y;
 				entities[d.player_id].z = entities[d.player_id].z + d.change_in_z;
-				entities[d.player_id].rotation = d.pitch;
-				entities[d.player_id].yaw = d.yaw;
+				entities[d.player_id].rotation = d.yaw;
+				entities[d.player_id].yaw = d.pitch;
 
 				socket.send('EntityMove', {
 					uuid: entities[d.player_id].id,
 					x: entities[d.player_id].z / 32,
-					y: entities[d.player_id].y / 32 - 1.8,
+					y: (entities[d.player_id].y - 51) / 32,
 					z: entities[d.player_id].x / 32,
-					rotation: (entities[d.player_id].rotation / 255) * 6.28,
-					yaw: entities[d.player_id].yaw / 3.14,
+					rotation: (entities[d.player_id].rotation - 64) / 255 * 6.28,
+					yaw: entities[d.player_id].yaw / 255 * 6.28,
 				});
 			});
 
 			player.on('orientation_update', (d) => {
-				entities[d.player_id].rotation = d.pitch;
-				entities[d.player_id].yaw = d.yaw;
+				entities[d.player_id].rotation = d.yaw;
+				entities[d.player_id].yaw = d.pitch;
 
 				socket.send('EntityMove', {
 					uuid: entities[d.player_id].id,
 					x: entities[d.player_id].z / 32,
-					y: entities[d.player_id].y / 32  - 1.8,
+					y: (entities[d.player_id].y - 51) / 32,
 					z: entities[d.player_id].x / 32,
-					rotation: (entities[d.player_id].rotation / 255) * 6.28,
-					yaw: entities[d.player_id].yaw / 3.14,
+					rotation: (entities[d.player_id].rotation - 64) / 255 * 6.28,
+					yaw: entities[d.player_id].yaw / 255 * 6.28
 				});
 			});
 
@@ -539,9 +539,9 @@ class Server extends EventEmitter {
 					socket.send('EntityMove', {
 						uuid: entities[d.player_id].id,
 						x: entities[d.player_id].z / 32,
-						y: entities[d.player_id].y / 32,
+						y: (entities[d.player_id].y - 51) / 32,
 						z: entities[d.player_id].x / 32,
-						rotation: (entities[d.player_id].rotation / 255) * 6.28,
+						rotation: (entities[d.player_id].rotation - 64) / 255 * 6.28,
 						yaw: entities[d.player_id].yaw / 3.14,
 					});
 				}
