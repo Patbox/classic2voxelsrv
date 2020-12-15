@@ -23,112 +23,13 @@ import {
 } from 'voxelsrv-protocol/js/client';
 
 import ndarray = require('ndarray');
+
+import { items as itemRegistry, blocks as blockRegistry } from './registry.json'; 
+
 import { IPlayerEntity, IPlayerTeleport, IWorldChunkLoad } from 'voxelsrv-protocol/js/server';
 
 const minecraft = require('minecraft-classic-protocol');
-const mcData = require('minecraft-data')('0.30c');
 
-const blockRegistry: { [index: string]: any } = {};
-const itemRegistry: { [index: string]: any } = {};
-
-mcData.blocksArray.forEach((block: any) => {
-	const id = replaceAll(block.name, ' ', '_');
-	blockRegistry[id] = {
-		rawid: block.id,
-		id: id,
-		texture: ['block/' + id.replace('cloth', 'wool')],
-		options: {},
-		hardness: 1,
-		miningtime: 0,
-		tool: 'pickaxe',
-		type: 0,
-		unbreakable: block.diggable,
-	};
-
-	itemRegistry[id] = {
-		id: id,
-		name: block.displayName,
-		texture: 'block/' + id.replace('cloth', 'wool'),
-		type: 'ItemBlock',
-		block: block.id,
-		flat: true,
-	};
-});
-
-blockRegistry['grass_block'].texture = ['block/grass_top', 'block/dirt', 'block/grass_side'];
-itemRegistry['grass_block'].texture = 'block/grass_side';
-
-blockRegistry['wood_planks'].texture = ['block/birch_planks'];
-itemRegistry['wood_planks'].texture = 'block/birch_planks';
-
-blockRegistry['sapling'].texture = ['block/oak_sapling'];
-itemRegistry['sapling'].texture = 'block/oak_sapling';
-
-blockRegistry['brick'].texture = ['block/bricks'];
-itemRegistry['brick'].texture = 'block/bricks';
-
-blockRegistry['wood'].texture = ['block/log_top', 'block/log'];
-itemRegistry['wood'].texture = 'block/log';
-
-blockRegistry['rose'].texture = ['block/red_flower'];
-itemRegistry['rose'].texture = 'block/red_flower';
-
-blockRegistry['aqua_green_cloth'].texture = ['block/light_blue_concrete'];
-itemRegistry['aqua_green_cloth'].texture = 'block/light_blue_concrete';
-
-blockRegistry['indigo_cloth'].texture = ['block/purple_concrete'];
-itemRegistry['indigo_cloth'].texture = 'block/purple_concrete';
-
-blockRegistry['violet_cloth'].texture = ['block/purple_concrete'];
-itemRegistry['violet_cloth'].texture = 'block/purple_concrete';
-
-blockRegistry['block_of_gold'].texture = ['block/gold_block'];
-itemRegistry['block_of_gold'].texture = 'block/gold_block';
-
-blockRegistry['block_of_iron'].texture = ['block/iron_block'];
-itemRegistry['block_of_iron'].texture = 'block/iron_block';
-
-blockRegistry['double_slab'].texture = ['block/smooth_stone', 'block/smooth_stone_slab_side'];
-itemRegistry['double_slab'].texture = 'block/smooth_stone_slab_side';
-
-blockRegistry['slab'].texture = ['block/smooth_stone', 'block/smooth_stone_slab_side'];
-itemRegistry['slab'].texture = 'block/smooth_stone_slab_side';
-
-blockRegistry['tnt'].texture = ['block/tnt_top', 'bloc/tnt_bottom', 'block/tnt_side'];
-itemRegistry['tnt'].texture = 'block/tnt_side';
-
-blockRegistry['bookshelf'].texture = ['block/oak_planks', 'bloc/bookshelf'];
-itemRegistry['bookshelf'].texture = 'block/bookshelf';
-
-blockRegistry['moss_stone'].texture = ['block/mossy_cobblestone'];
-itemRegistry['moss_stone'].texture = 'block/mossy_cobblestone';
-
-itemRegistry['flowing_lava'].texture = 'item/lava_bucket';
-itemRegistry['stationary_lava'].texture = 'item/lava_bucket';
-
-itemRegistry['flowing_water'].texture = 'item/water_bucket';
-itemRegistry['stationary_water'].texture = 'item/water_bucket';
-
-['sapling', 'dandelion', 'rose', 'brown_mushroom', 'red_mushroom'].forEach((x) => {
-	blockRegistry[x].options = { solid: false, opaque: false };
-});
-
-['flowing_water', 'stationary_water'].forEach((x) => {
-	blockRegistry[x].options = { fluid: true, material: 'water' };
-});
-
-['flowing_lava', 'stationary_lava'].forEach((x) => {
-	blockRegistry[x].options = { fluid: true, color: [0.6, 0.1, 0.1, 0.7] };
-	delete blockRegistry[x].texture
-});
-
-['glass', 'leaves'].forEach((x) => {
-	blockRegistry[x].options = { opaque: false };
-});
-
-['sapling', 'dandelion', 'rose', 'brown_mushroom', 'red_mushroom'].forEach((x) => {
-	blockRegistry[x].type = 1;
-});
 
 const colormap = {
 	'1': 'blue',
@@ -150,22 +51,25 @@ const colormap = {
 
 function invItems() {
 	const items = {};
-	let x;
+	let x = 0;
 
-	for (x = 0; x < mcData.blocksArray.length; x++) {
+	Object.values(itemRegistry).forEach((item) => {
 		items[x] = {
-			id: replaceAll(mcData.blocksArray[x].name, ' ', '_'),
+			id: item.id,
 			count: 1,
 			data: {},
 		};
-	}
+		x = x + 1;
+	});
 	return items;
 }
 
 function remapPitch(n) {
 	// Head
 	let x = Math.floor((n / 6.29) * 255) + 0;
-	if (0 > x) x = x + 255;
+	if (x < 0) x = x + 255;
+
+	if (x > 255 || x < 0) x = 0;
 
 	return x;
 }
@@ -174,6 +78,8 @@ function remapYaw(n) {
 	// Rotation
 	let x = Math.floor((n / 6.29) * 255) + 64;
 	if (x > 255) x = x - 255;
+
+	if (x > 255 || x < 0) x = 0;
 
 	return x;
 }
@@ -188,7 +94,6 @@ function replaceAll(text: string, toRep: string, out: string): string {
 	return x1;
 }
 
-delete blockRegistry['air'];
 
 const movement = {
 	airJumps: 999,
@@ -199,7 +104,7 @@ const movement = {
 	jumpImpulse: 8.5,
 	jumpTime: 500,
 	jumping: false,
-	maxSpeed: 7.5,
+	maxSpeed: 6.5,
 	moveForce: 30,
 	responsiveness: 15,
 	running: false,
@@ -278,11 +183,11 @@ class Server extends EventEmitter {
 				y: 0,
 				z: 0,
 				rotation: 0,
-				pitch: 0
+				pitch: 0,
 			};
 			let inventory = {
 				items: invItems(),
-				size: mcData.blocksArray.length,
+				size: 49,
 				tempslot: {},
 				selected: 0,
 			};
@@ -309,13 +214,18 @@ class Server extends EventEmitter {
 
 			socket.on('close', () => {
 				player.end();
+				inventory = null;
+				world = null;
+				tempWorld = null;
 			});
 			socket.on('ActionMessage', (data: IActionMessage) => {
 				player.write('message', { message: data.message });
 			});
 
 			socket.on('ActionBlockBreak', (data: IActionBlockBreak) => {
-				player.write('set_block', { x: data.z, y: data.y, z: data.x, mode: 0 });
+				let id = 1;
+				if (inventory.items[inventory.selected] != undefined) id = blockRegistry[inventory.items[inventory.selected].id].rawid;
+				player.write('set_block', { x: data.z, y: data.y, z: data.x, mode: 0, block_type: id });
 			});
 
 			socket.on('ActionBlockPlace', (data: IActionBlockPlace) => {
@@ -324,9 +234,38 @@ class Server extends EventEmitter {
 				if (block != undefined) player.write('set_block', { x: data.z, y: data.y, z: data.x, block_type: block.rawid, mode: 1 });
 			});
 
+			function updateTab() {
+				let message = [];
+				Object.values(entities).forEach((x: any) => {
+					message.push({ text: x.name + '\n', color: 'white' });
+				});
+
+				message.push({ text: data.username, color: 'white' });
+
+				socket.send('TabUpdate', { message: message, time: Date.now() });
+			}
+
 			socket.on('ActionInventoryClick', (data: IActionInventoryClick) => {
 				if (data.type == 'select') {
 					inventory.selected = data.slot;
+				} else if (data.type == 'switch') {
+					let temp1 = inventory.items[data.slot2];
+					let temp2 = inventory.items[data.slot];
+
+					inventory.items[data.slot] = temp1;
+					inventory.items[data.slot2] = temp2;
+
+					socket.send('PlayerSlotUpdate', {
+						slot: data.slot2,
+						data: JSON.stringify(inventory.items[data.slot2]),
+						type: 'main',
+					});
+
+					socket.send('PlayerSlotUpdate', {
+						slot: data.slot,
+						data: JSON.stringify(inventory.items[data.slot]),
+						type: 'main',
+					});
 				} else {
 					let temp1 = inventory.tempslot;
 					let temp2 = inventory.items[data.slot];
@@ -351,7 +290,7 @@ class Server extends EventEmitter {
 			socket.on('ActionMove', async (data: IActionMove) => {
 				if (!canMove) return;
 
-				playerData = {...playerData, ...data};
+				playerData = { ...playerData, ...data };
 
 				player.write('position', {
 					x: data.z * 32,
@@ -365,7 +304,7 @@ class Server extends EventEmitter {
 			socket.on('ActionMoveLook', async (data: IActionMoveLook) => {
 				if (!canMove) return;
 
-				playerData = {...playerData, ...data};
+				playerData = { ...playerData, ...data };
 
 				player.write('position', {
 					x: data.z * 32,
@@ -378,7 +317,7 @@ class Server extends EventEmitter {
 			socket.on('ActionLook', async (data: IActionLook) => {
 				if (!canMove) return;
 
-				playerData = {...playerData, ...data};
+				playerData = { ...playerData, ...data };
 
 				player.write('position', {
 					x: playerData.z * 32,
@@ -452,8 +391,8 @@ class Server extends EventEmitter {
 								model: 'player',
 								texture: 'entity/steve',
 								type: 'player',
-								nametag: true,
 								name: d.player_name,
+								nametag: true,
 								maxHealth: 20,
 								health: 20,
 								rotation: 1,
@@ -462,7 +401,7 @@ class Server extends EventEmitter {
 								armor: { items: { 0: {}, 1: {}, 2: {}, 3: {} }, size: 4, selected: 0 },
 							}),
 						});
-					}, 100);
+					}, 50);
 
 					entities[d.player_id] = {
 						id: `player${d.player_id.toString()}`,
@@ -472,10 +411,14 @@ class Server extends EventEmitter {
 						name: d.player_name,
 					};
 				}
+
+				updateTab();
 			});
 
 			player.on('despawn_player', (d) => {
-				socket.send('EntityRemove', { uuid: d.player_id.toString() });
+				if (entities[d.player_id] != undefined) delete entities[d.player_id];
+				socket.send('EntityRemove', { uuid: `player${d.player_id.toString()}` });
+				updateTab();
 			});
 
 			player.on('position_update', (d) => {
@@ -488,8 +431,8 @@ class Server extends EventEmitter {
 					x: entities[d.player_id].z / 32,
 					y: (entities[d.player_id].y - 51) / 32,
 					z: entities[d.player_id].x / 32,
-					rotation: (entities[d.player_id].rotation - 64) / 255 * 6.28,
-					yaw: entities[d.player_id].yaw / 255 * 6.28,
+					rotation: ((entities[d.player_id].rotation - 64) / 255) * 6.28,
+					yaw: (entities[d.player_id].yaw / 255) * 6.28,
 				});
 			});
 
@@ -505,8 +448,8 @@ class Server extends EventEmitter {
 					x: entities[d.player_id].z / 32,
 					y: (entities[d.player_id].y - 51) / 32,
 					z: entities[d.player_id].x / 32,
-					rotation: (entities[d.player_id].rotation - 64) / 255 * 6.28,
-					yaw: entities[d.player_id].yaw / 255 * 6.28,
+					rotation: ((entities[d.player_id].rotation - 64) / 255) * 6.28,
+					yaw: (entities[d.player_id].yaw / 255) * 6.28,
 				});
 			});
 
@@ -519,8 +462,8 @@ class Server extends EventEmitter {
 					x: entities[d.player_id].z / 32,
 					y: (entities[d.player_id].y - 51) / 32,
 					z: entities[d.player_id].x / 32,
-					rotation: (entities[d.player_id].rotation - 64) / 255 * 6.28,
-					yaw: entities[d.player_id].yaw / 255 * 6.28
+					rotation: ((entities[d.player_id].rotation - 64) / 255) * 6.28,
+					yaw: (entities[d.player_id].yaw / 255) * 6.28,
 				});
 			});
 
@@ -541,7 +484,7 @@ class Server extends EventEmitter {
 						x: entities[d.player_id].z / 32,
 						y: (entities[d.player_id].y - 51) / 32,
 						z: entities[d.player_id].x / 32,
-						rotation: (entities[d.player_id].rotation - 64) / 255 * 6.28,
+						rotation: ((entities[d.player_id].rotation - 64) / 255) * 6.28,
 						yaw: entities[d.player_id].yaw / 3.14,
 					});
 				}
@@ -598,9 +541,9 @@ class Server extends EventEmitter {
 								x: k,
 								y: j,
 								z: i,
-								data: Buffer.from(chunk.data.buffer, chunk.data.byteOffset),
+								data: serverConfig.chunkTransportCompression ? zlib.deflateSync(Buffer.from(chunk.data.buffer, chunk.data.byteOffset)) : Buffer.from(chunk.data.buffer, chunk.data.byteOffset),
 								type: false,
-								compressed: false,
+								compressed: serverConfig.chunkTransportCompression,
 							};
 
 							worldPackets.push(data);
